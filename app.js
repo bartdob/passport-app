@@ -1,24 +1,13 @@
-const express = require('express')
-const app = express()
+const express 	= require('express')
+const app 		= express()
+var gi 			= require(`gitignore`);
 
-const runner = require('gitlab-runner'), Client = runner.Client, Server = runner.Server
-
-new Server().start()            // starts a server at port 8080
-//new Server(9876).start()        // starts a server at port 9876
-
-
-var gi = require(`gitignore`);
-
-
-// const api = new Gitlab({
-  // token: 'n9gUZzJUTpizLyDymHUH',
-// });
-
+app.set('view engine', 'ejs');
 
 
 
 app.get('/', function (req, res) {
-  res.send('Hello World')
+  res.render("home");
 })
 
 app.listen(3000, function(){
