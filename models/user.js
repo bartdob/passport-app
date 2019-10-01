@@ -5,16 +5,16 @@ var mongoose = require("mongoose"),
 var UserSchema = new mongoose.Schema({
 	usernam: String,
 	password: String,
-	city: String,
-	gender: String,
-	age: {
-        type: Number,
-        integer: true
-    },
-	phone: {
-        type: Number,
-        integer: true
-    }
+// //	city: String,
+// //	gender: String,
+// //	age: {
+// //        type: Number,
+//         integer: true
+//     },
+// 	phone: {
+//         type: Number,
+//         integer: true
+//     }
 });
 
 UserSchema.plugin(passportLocalMongoose);
