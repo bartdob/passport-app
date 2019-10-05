@@ -1,12 +1,14 @@
-const express 				= require('express'),
-	  gi 					= require(`gitignore`),
-	  passport  			= require('passport'),
-	  bodyParser			= require('body-parser'),
-	  User 					= require('./models/user'),
-	  mongoose				= require('mongoose'),
-	  integerValidator = require('mongoose-integer'),
-	  LocalStrategy 		= require('passport-local'),
-	  passportLocalMongoose = require('passport-local-mongoose');
+const express 					= require('express'),
+	  gi 						= require(`gitignore`),
+	  bodyParser				= require('body-parser'),
+	  User 						= require('./models/user'),
+	  mongoose					= require('mongoose'),
+	  integerValidator 			= require('mongoose-integer'),
+	  passport  				= require('passport'),
+	  LocalStrategy 			= require('passport-local'),
+	  passportLocalMongoose 	= require('passport-local-mongoose'),
+	  {check,validationResult} 	= require('express-validator'),
+	  router 					= express.Router();
 
 mongoose.connect("mongodb://localhost/pass_app", { useNewUrlParser: true, useUnifiedTopology: true}, function (err, client) {
   if (err) {
@@ -20,7 +22,8 @@ var app = express();
 app.use(require("express-session")({
 	secret: "rolnik sam w dolinie", // use to encoude and decode
 	resave: false,
-	saveUninitialized: false
+	saveUninitialized: false,
+	cookie: {maxAge: 1000}
 }));
 
 
@@ -32,6 +35,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 passport.serializeUser(User.serializeUser());       //session to code incode
 passport.deserializeUser(User.deserializeUser());
 
+passport.use(new LocalStrategy(User.authenticate()));
+
 //++++++++++++++++++++++++++++++++++++++++++++++++
 //ROUTS
 //
@@ -42,7 +47,7 @@ app.get('/', function (req, res) {
 })
 
 
-app.get('/secret', function (req, res){
+app.get('/secret', isLoggedIn, function (req, res){
 	res.render("secret");
 })
 
@@ -52,11 +57,34 @@ app.get('/register', function(req, res){
 	res.render("register");
 })
 
-app.post('/register', function(req, res){
-	req.body.username;
-	req.body.password;
-	req.body.password2;
-	
+// app.route('/register', function(req, res){
+// 	req.body.username;
+// 	req.body.password;
+// 	req.body.password2;
+
+// //  check('email', 'email is required').isEmail(),
+//   check('username', 'username is required').not().isEmpty(),
+//   check('password', 'password is required').not().isEmpty(),
+//   check('password2', 'password2 is required').not().isEmpty(),
+//  // check('password').isLength({ min: 4 }),
+//   function(req, res, next) {
+//   //check validate data
+//   const result= validationResult(req);
+//   var errors = result.errors;
+//   for (var key in errors) {
+//         console.log(errors[key].value);
+//   }
+//   if (!result.isEmpty()) {
+//   //response validate data to register.ejs
+//      res.render('register', {
+//       errors: errors
+//   });
+//   };
+// }});
+// USER TO DATABASE	
+app.post('/register', function (req, res){
+	req.body.username
+	req.body.password
 	User.register(new User({username: req.body.username}), req.body.password, 
 	function(err, user){
 		if(err){
@@ -65,12 +93,38 @@ app.post('/register', function(req, res){
 			console.log(req.body.password);
 		return res.render('register');
 	}
-	passport.authenticate("local")(res, req, function(){
+	if(req.body.password===req.body.password2){
+	passport.authenticate('local')(res, req, function(){
 		res.redirect("/secret");
-	});
+	})}else{
+		console.log ("Password do not macht");
+	};
 });
+});
+app.get("/login", function(req, res){
+	res.render("login");
 });
 
+app.post("/login", passport.authenticate("local", {
+	successRedirect: "/secret",
+	failureRedirect: "/login"
+}) ,function(req, res){
+});
+
+app.get("/logout", function(req, res){
+	res.send("you are logg out");
+    req.logout();
+    res.redirect("/");
+});
+	
+
+function isLoggedIn(req, res, next){
+	if(req.isAuthenticated()){
+		return next();
+	}
+	res.redirect('/login');
+}
+
 app.listen(3000, function(){
-	console.log("+++++++++++++UP and RUNNING+++++++++++++")
-})	
+	console.log("+++++++++++++UP and RUNNING+++++++++++++");
+})
